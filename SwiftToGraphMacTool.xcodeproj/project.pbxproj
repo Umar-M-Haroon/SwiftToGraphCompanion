@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1DFD028229A70D4400383D8D /* SwiftToGraph in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFD028129A70D4400383D8D /* SwiftToGraph */; };
 		1DFF256929A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DFF256829A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift */; };
 		1DFF256B29A6BA71009A36E1 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DFF256A29A6BA71009A36E1 /* ContentView.swift */; };
 		1DFF256D29A6BA73009A36E1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 1DFF256C29A6BA73009A36E1 /* Assets.xcassets */; };
@@ -27,6 +28,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DFD028229A70D4400383D8D /* SwiftToGraph in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -36,8 +38,10 @@
 		1DFF255C29A6BA71009A36E1 = {
 			isa = PBXGroup;
 			children = (
+				1DFF257729A706B8009A36E1 /* Packages */,
 				1DFF256729A6BA71009A36E1 /* SwiftToGraphMacTool */,
 				1DFF256629A6BA71009A36E1 /* Products */,
+				1DFF257F29A707DB009A36E1 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -69,6 +73,20 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		1DFF257729A706B8009A36E1 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		1DFF257F29A707DB009A36E1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -85,6 +103,9 @@
 			dependencies = (
 			);
 			name = SwiftToGraphMacTool;
+			packageProductDependencies = (
+				1DFD028129A70D4400383D8D /* SwiftToGraph */,
+			);
 			productName = SwiftToGraphMacTool;
 			productReference = 1DFF256529A6BA71009A36E1 /* SwiftToGraphMacTool.app */;
 			productType = "com.apple.product-type.application";
@@ -113,6 +134,9 @@
 				Base,
 			);
 			mainGroup = 1DFF255C29A6BA71009A36E1;
+			packageReferences = (
+				1DFD028029A70D4400383D8D /* XCRemoteSwiftPackageReference "SwiftToGraph" */,
+			);
 			productRefGroup = 1DFF256629A6BA71009A36E1 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -336,6 +360,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1DFD028029A70D4400383D8D /* XCRemoteSwiftPackageReference "SwiftToGraph" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Umar-M-Haroon/SwiftToGraph";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1DFD028129A70D4400383D8D /* SwiftToGraph */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1DFD028029A70D4400383D8D /* XCRemoteSwiftPackageReference "SwiftToGraph" */;
+			productName = SwiftToGraph;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1DFF255D29A6BA71009A36E1 /* Project object */;
 }

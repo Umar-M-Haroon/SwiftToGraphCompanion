@@ -16,6 +16,7 @@ struct ContentView: SwiftUI.View {
     @State var files: [URL] = []
     @State var selectedFiles: [Bool] = []
     @State var text: String?
+    @State var pdfData: Data?
     var body: some SwiftUI.View {
         NavigationSplitView(sidebar: {
             List(0..<self.files.count, id: \.self, selection: self.$selectedFiles) { i in
@@ -24,24 +25,27 @@ struct ContentView: SwiftUI.View {
                 }
             }
             .navigationSplitViewStyle(BalancedNavigationSplitViewStyle())
-            .onChange(of: self.selectedFiles) { newValue in
+            Button {
                 let allFiles: String = self.files
                     .enumerated()
                     .filter({ (i, _) in
-                      selectedFiles[i]
+                        selectedFiles[i]
                     })
                     .compactMap({ (_, file) in
                         try? String(contentsOf: file)
                     })
                     .reduce("", +)
-                guard var graph = try? SwiftParser().parse(source: allFiles) else { return }
+                guard let graph = try? SwiftParser().parse(source: allFiles) else { return }
                 let highlightedEdges = OrderedSet(graph.edges.filter { edge in
                     guard let uNode = graph[edge.u] as? ParserNode,
-                          let vNode = graph[edge.v] as? ParserNode else { return false }
-                    return uNode.type is FunctionCallExprSyntax && vNode.type is FunctionDeclSyntax ||  vNode.type is FunctionCallExprSyntax && uNode.type is FunctionDeclSyntax
+                          let vNode = graph[edge.v] as? ParserNode,
+                          uNode != vNode else { return false }
+                    return uNode.type is FunctionCallExprSyntax && vNode.type is FunctionDeclSyntax ||  vNode.type is FunctionCallExprSyntax && uNode.type is FunctionDeclSyntax || vNode.type is FunctionCallExprSyntax && uNode.type is FunctionCallExprSyntax
                 })
                 let graphEdges = graph.edges.subtracting(highlightedEdges)
-                
+                    .filter { edge in
+                    edge.u != edge.v
+                }
                 
                 let edges = graphEdges.map({EdgeView(edge: $0, attributes: [], uDescription: graph[$0.u].description, vDescription: graph[$0.v].description)})
                 let highlightedEdgeViews = highlightedEdges.map {
@@ -53,36 +57,19 @@ struct ContentView: SwiftUI.View {
                     }
                 }
                 let views = nodes.map({NodeView(node: $0, attributes: [])})
-                let allViews: [any GraphKit.View] = views + edges + highlightedEdgeViews
+                let allViews: [any DOTView] = highlightedEdgeViews + edges + views
                 let graphView = GraphView {
                     allViews
                 }
-                let finalText = graphView.build().joined(separator: "\n")
-                self.text = finalText
+                let renderer = DOTRenderer(layout: .dot)
+                self.pdfData = renderer.render(view: graphView)
+            } label: {
+                Text("Build")
             }
         }, detail: {
-            ScrollView {
-                Text(text ?? "")
-                    .textSelection(.enabled)
-                    .contextMenu {
-                        Button(action: {
-                            
-                            print(NSPasteboard.general.setString(self.text ?? "", forType: .string))
-                        }) {
-                            Label("Copy to clipboard", image: "doc.on.doc")
-                        }
-                    }
+            if let pdfData {
+                PDFRenderer(data: pdfData)
             }
-            if let text = self.text {
-                Button(action: {
-                    NSPasteboard.general.clearContents()
-                    print(NSPasteboard.general.setString(text, forType: .string))
-                }) {
-                    Label("Copy to clipboard", systemImage: "doc.on.doc")
-                }
-            }
-            Link("Paste Graph to Website", destination: URL(string: "https://dreampuf.github.io/GraphvizOnline/")!)
-                .navigationTitle("Swift To Mac Companion")
         })
         .toolbar {
             Button {
@@ -105,6 +92,19 @@ struct ContentView: SwiftUI.View {
                 Label("Select Folder", systemImage: "folder")
             }
             
+        }
+    }
+    func write() {
+        guard let text = self.text else { return }
+        let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+        let documentsDirectory = paths[0]
+        let filename = documentsDirectory.appendingPathComponent("output.dot")
+        
+        do {
+            try text.write(to: filename, atomically: true, encoding: String.Encoding.utf8)
+        } catch let e {
+            print(e)
+            // failed to write file – bad permissions, bad filename, missing permissions, or more likely it can't be converted to the encoding
         }
     }
 }

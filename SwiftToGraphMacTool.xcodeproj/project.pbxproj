@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D363F9229B86D5F00BD7F78 /* Cache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D363F9129B86D5F00BD7F78 /* Cache.swift */; };
+		1D363F9429B872D100BD7F78 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D363F9329B872D100BD7F78 /* ViewModel.swift */; };
 		1D8671DD29B196D20042BBE6 /* PDFRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D8671DC29B196D20042BBE6 /* PDFRenderer.swift */; };
 		1DFD028229A70D4400383D8D /* SwiftToGraph in Frameworks */ = {isa = PBXBuildFile; productRef = 1DFD028129A70D4400383D8D /* SwiftToGraph */; };
 		1DFF256929A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DFF256829A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift */; };
@@ -16,6 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1D363F9129B86D5F00BD7F78 /* Cache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cache.swift; sourceTree = "<group>"; };
+		1D363F9329B872D100BD7F78 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		1D8671DC29B196D20042BBE6 /* PDFRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFRenderer.swift; sourceTree = "<group>"; };
 		1DFF256529A6BA71009A36E1 /* SwiftToGraphMacTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftToGraphMacTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DFF256829A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftToGraphMacToolApp.swift; sourceTree = "<group>"; };
@@ -60,6 +64,8 @@
 			children = (
 				1DFF256829A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift */,
 				1DFF256A29A6BA71009A36E1 /* ContentView.swift */,
+				1D363F9329B872D100BD7F78 /* ViewModel.swift */,
+				1D363F9129B86D5F00BD7F78 /* Cache.swift */,
 				1D8671DC29B196D20042BBE6 /* PDFRenderer.swift */,
 				1DFF256C29A6BA73009A36E1 /* Assets.xcassets */,
 				1DFF257129A6BA73009A36E1 /* SwiftToGraphMacTool.entitlements */,
@@ -166,8 +172,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D363F9429B872D100BD7F78 /* ViewModel.swift in Sources */,
 				1D8671DD29B196D20042BBE6 /* PDFRenderer.swift in Sources */,
 				1DFF256B29A6BA71009A36E1 /* ContentView.swift in Sources */,
+				1D363F9229B86D5F00BD7F78 /* Cache.swift in Sources */,
 				1DFF256929A6BA71009A36E1 /* SwiftToGraphMacToolApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

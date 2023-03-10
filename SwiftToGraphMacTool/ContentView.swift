@@ -11,12 +11,17 @@ import GraphKit
 import OrderedCollections
 import SwiftSyntax
 import UniformTypeIdentifiers
+extension DOTLayout: CaseIterable {
+    public static var allCases: [DOTLayout] = [.neato, .dot, .circo, .fdp, .nop, .nop1, .nop2, .osage, .patchwork, .twopi, .sfdp]
+}
 struct ContentView: SwiftUI.View {
     @State var fileURL: URL?
     @State var files: [URL] = []
     @State var selectedFiles: [Bool] = []
     @State var text: String?
-    @State var pdfData: Data?
+    @State var selectedLayout: DOTLayout = .dot
+    @StateObject var model: ViewModel
+    @State var progress: Double = 0
     var body: some SwiftUI.View {
         NavigationSplitView(sidebar: {
             List(0..<self.files.count, id: \.self, selection: self.$selectedFiles) { i in
@@ -25,6 +30,13 @@ struct ContentView: SwiftUI.View {
                 }
             }
             .navigationSplitViewStyle(BalancedNavigationSplitViewStyle())
+            List(DOTLayout.allCases, id: \.self, selection: $selectedLayout) { layout in
+                Text(layout.rawValue)
+            }
+        }, detail: {
+            if progress > 0 {
+                ProgressView("Loading", value: progress, total: 1.0)
+            }
             Button {
                 let allFiles: String = self.files
                     .enumerated()
@@ -35,39 +47,11 @@ struct ContentView: SwiftUI.View {
                         try? String(contentsOf: file)
                     })
                     .reduce("", +)
-                guard let graph = try? SwiftParser().parse(source: allFiles) else { return }
-                let highlightedEdges = OrderedSet(graph.edges.filter { edge in
-                    guard let uNode = graph[edge.u] as? ParserNode,
-                          let vNode = graph[edge.v] as? ParserNode,
-                          uNode != vNode else { return false }
-                    return uNode.type is FunctionCallExprSyntax && vNode.type is FunctionDeclSyntax ||  vNode.type is FunctionCallExprSyntax && uNode.type is FunctionDeclSyntax || vNode.type is FunctionCallExprSyntax && uNode.type is FunctionCallExprSyntax
-                })
-                let graphEdges = graph.edges.subtracting(highlightedEdges)
-                    .filter { edge in
-                    edge.u != edge.v
-                }
-                
-                let edges = graphEdges.map({EdgeView(edge: $0, attributes: [], uDescription: graph[$0.u].description, vDescription: graph[$0.v].description)})
-                let highlightedEdgeViews = highlightedEdges.map {
-                    EdgeView(edge: $0, attributes: [.init(key: EdgeAttributeKey.color, value: "red")], uDescription: graph[$0.u].description, vDescription: graph[$0.v].description)
-                }
-                let nodes = graph.nodes.filter { node in
-                    graph.edges.contains { edge in
-                        edge.u == node.id || edge.v == node.id
-                    }
-                }
-                let views = nodes.map({NodeView(node: $0, attributes: [])})
-                let allViews: [any DOTView] = highlightedEdgeViews + edges + views
-                let graphView = GraphView {
-                    allViews
-                }
-                let renderer = DOTRenderer(layout: .dot)
-                self.pdfData = renderer.render(view: graphView)
+                model.render(allFiles: allFiles, selectedLayout: selectedLayout)
             } label: {
                 Text("Build")
             }
-        }, detail: {
-            if let pdfData {
+            if let pdfData = model.data {
                 PDFRenderer(data: pdfData)
             }
         })
@@ -79,7 +63,7 @@ struct ContentView: SwiftUI.View {
                 if panel.runModal() == .OK {
                     if let url = panel.url {
                         self.fileURL = panel.url
-                        let allSymbols = FileManager.default
+                        var allSymbols = FileManager.default
                             .enumerator(at: url, includingPropertiesForKeys: nil)?
                             .compactMap { $0 as? URL }
                             .filter { $0.hasDirectoryPath == false }
@@ -156,6 +140,6 @@ struct ContentView_Previews: PreviewProvider {
     ]
     
     static var previews: some SwiftUI.View {
-        ContentView(files: urls, selectedFiles: [Bool](repeating: true, count: urls.count))
+        ContentView(files: urls, selectedFiles: [Bool](repeating: true, count: urls.count), model: ViewModel())
     }
 }

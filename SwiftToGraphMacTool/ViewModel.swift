@@ -10,6 +10,7 @@ import GraphKit
 import SwiftToGraph
 import OrderedCollections
 import SwiftSyntax
+
 class ViewModel: ObservableObject {
     var graphCache: Cache<String, String>
     @Published
@@ -29,31 +30,34 @@ class ViewModel: ObservableObject {
         }
     }
     
-    func render(allFiles: String, selectedLayout: DOTLayout) {
-        if let dot = graphFor(files: allFiles) {
-            DispatchQueue.global().async {
-                let renderer = DOTRenderer(layout: selectedLayout)
-                print(dot)
-                self.write(dot: dot)
-                
-                renderer.render(dotString: dot, format: .pdf, options: .none, completion: { result in
-                    switch result {
-                    case .failure(let error):
-                        print(error.localizedDescription)
-                        print(error)
-                    case .success(let data):
-                        DispatchQueue.main.async {
-                            self.progress += 0.05
-                            self.data = data
-                        }
-                    }
-                })
-            }
-            return
+    func render(allFiles: String, selectedLayout: DOTLayout) async throws {
+//        if let dot = graphFor(files: allFiles) {
+//            Task {
+//                let renderer = DOTRenderer(layout: selectedLayout)
+//                self.write(dot: dot)
+//
+//                renderer.render(dotString: dot, format: .pdf, options: .none, completion: { result in
+//                    switch result {
+//                    case .failure(let error):
+//                        print(error.localizedDescription)
+//                        print(error)
+//                    case .success(let data):
+//                        await MainActor.run(body: {
+//                            self.progress += 0.05
+//                        })
+//                        self.data = data
+//                    }
+//                })
+//            }
+//            return
+//        }
+        await MainActor.run {
+            self.progress += 0.2
         }
-        self.progress += 0.2
-        guard var graph = try? SwiftParser().parse(source: allFiles) else { return }
-        self.progress += 0.2
+        guard var graph = try? await ParserManager().parse(source: allFiles) else { return }
+        await MainActor.run {
+            self.progress += 0.2
+        }
         var highlightedEdges: OrderedSet<GraphKit.Edge> = []
         graph.nodes
             .compactMap({$0 as? ParserNode})
@@ -82,7 +86,9 @@ class ViewModel: ObservableObject {
                 })
                 graph.removeNode(id: caller.id)
             }
-        self.progress += 0.2
+        await MainActor.run(body: {
+            self.progress += 0.2
+        })
         let graphEdges = graph.edges.subtracting(highlightedEdges)
             .filter { edge in
                 edge.u != edge.v
@@ -103,23 +109,14 @@ class ViewModel: ObservableObject {
             allViews
         }
         let graphDOT = graphView.build().joined(separator: "\n")
-        print(graphDOT)
         write(dot: graphDOT)
         addToCache(files: allFiles, graph: graphDOT)
-        DispatchQueue.global().async {
-            let renderer = DOTRenderer(layout: selectedLayout)
-            renderer.render(view: graphView, format: .pdf, options: .none, completion: { result in
-                switch result {
-                case .failure(let error):
-                    print(error.localizedDescription)
-                    print(error)
-                case .success(let data):
-                    DispatchQueue.main.async {
-                        self.progress += 0.4
-                        self.data = data
-                    }
-                }
-            })
+        let renderer = DOTRenderer(layout: selectedLayout)
+        
+        let pdfData = try await renderer.render(view: graphView, format: .pdf, options: .none)
+        await MainActor.run {
+            self.data = pdfData
+            self.progress += 0.4
         }
     }
     

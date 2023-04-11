@@ -21,7 +21,7 @@ struct ContentView: SwiftUI.View {
     @State var text: String?
     @State var selectedLayout: DOTLayout = .dot
     @StateObject var model: ViewModel
-    @State var progress: Double = 0
+    @State var selectedOptions: [Options] = []
     var body: some SwiftUI.View {
         NavigationSplitView(sidebar: {
             List(0..<self.files.count, id: \.self, selection: self.$selectedFiles) { i in
@@ -30,12 +30,39 @@ struct ContentView: SwiftUI.View {
                 }
             }
             .navigationSplitViewStyle(BalancedNavigationSplitViewStyle())
-            List(DOTLayout.allCases, id: \.self, selection: $selectedLayout) { layout in
-                Text(layout.rawValue)
+            .toolbar {
+                HStack {
+                    Button {
+                        let panel = NSOpenPanel()
+                        panel.allowsMultipleSelection = false
+                        panel.canChooseDirectories = true
+                        if panel.runModal() == .OK {
+                            if let url = panel.url {
+                                self.fileURL = panel.url
+                                var allSymbols = FileManager.default
+                                    .enumerator(at: url, includingPropertiesForKeys: nil)?
+                                    .compactMap { $0 as? URL }
+                                    .filter { $0.hasDirectoryPath == false }
+                                    .filter { $0.pathExtension == "swift" }
+//                                print(allSymbols)
+                                files = allSymbols ?? []
+                                self.selectedFiles = [Bool](repeating: true, count: files.count)
+                            }
+                        }
+                    } label: {
+                        Label("Select Folder", systemImage: "folder")
+                    }
+                    Picker("Layout", selection: $selectedLayout) {
+                        ForEach(DOTLayout.allCases, id: \.self) { layout in
+                            Text(layout.rawValue)
+                        }
+                    }
+                }
             }
+            
         }, detail: {
-            if progress > 0 {
-                ProgressView("Loading", value: progress, total: 1.0)
+            if model.progress > 0 {
+                ProgressView("Loading", value: model.progress, total: 1.0)
             }
             Button {
                 let allFiles: String = self.files
@@ -47,7 +74,10 @@ struct ContentView: SwiftUI.View {
                         try? String(contentsOf: file)
                     })
                     .reduce("", +)
-                model.render(allFiles: allFiles, selectedLayout: selectedLayout)
+                model.progress = 0
+                Task {
+                    try? await model.render(allFiles: allFiles, selectedLayout: selectedLayout)
+                }
             } label: {
                 Text("Build")
             }
@@ -55,28 +85,6 @@ struct ContentView: SwiftUI.View {
                 PDFRenderer(data: pdfData)
             }
         })
-        .toolbar {
-            Button {
-                let panel = NSOpenPanel()
-                panel.allowsMultipleSelection = false
-                panel.canChooseDirectories = true
-                if panel.runModal() == .OK {
-                    if let url = panel.url {
-                        self.fileURL = panel.url
-                        var allSymbols = FileManager.default
-                            .enumerator(at: url, includingPropertiesForKeys: nil)?
-                            .compactMap { $0 as? URL }
-                            .filter { $0.hasDirectoryPath == false }
-                            .filter { $0.pathExtension == "swift" }
-                        files = allSymbols ?? []
-                        self.selectedFiles = [Bool](repeating: true, count: files.count)
-                    }
-                }
-            } label: {
-                Label("Select Folder", systemImage: "folder")
-            }
-            
-        }
     }
     func write() {
         guard let text = self.text else { return }
